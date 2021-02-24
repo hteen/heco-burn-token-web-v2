@@ -31,7 +31,7 @@ contract SafeMath {
 }
 interface  burn_token {
     //获取老合约的算力
-    function power(address owner) external view returns (uint);
+    function power(address owner) external view returns (uint256);
 }
 
 library TransferHelper {
@@ -63,7 +63,7 @@ contract burn_token_v2 is SafeMath{
     bool public is_upgrade = true;//是否开启老合约升级到新合约
     bool public is_mint = false;//是否开启挖矿
     
-    uint public anti_bot = 10e8;//如果v1用户qki余额小于这个值，转化率只有0.1%。
+    uint public anti_bot = 10e18;//如果v1用户usdt余额小于这个值，不能挖矿
     uint public requireHQKI = 0;//需要的qki数量
     address public HQKIToken = 0x164F31A5bfA746bcc55bd2279A400B645E99aaeB;//hqki
     uint public min_gasprice = 1 gwei;//最低gas价格
@@ -369,9 +369,10 @@ contract burn_token_v2 is SafeMath{
         if(tx.gasprice < min_gasprice) revert("min_gasprice");
         require(power[msg.sender] == 0);//零算力账号才可以
         require(is_upgrade);//需要开启空投
-        uint hbt_power = burn_token(0x9EcB5b9eac588F23c6627f1Ce0122D896c4C5C93).power(msg.sender);
+        uint256 hbt_power = burn_token(0x9EcB5b9eac588F23c6627f1Ce0122D896c4C5C93).power(msg.sender);
         if(hbt_power > 100)//老合约没有算力就不用升级
         {
+            power[msg.sender] = hbt_power;
             totalPower += hbt_power;
             totalUsersAmount++;
         }
@@ -489,9 +490,9 @@ contract burn_token_v2 is SafeMath{
 
         uint miner_days=(block.timestamp - last_miner[msg.sender])/epoch;
         
-        if(miner_days > 5)
+        if(miner_days > 7)
         {
-            miner_days = 5;//单次最多领取5天的
+            miner_days = 7;//单次最多领取7天的
         }
         
         //第一次挖矿只能1天
